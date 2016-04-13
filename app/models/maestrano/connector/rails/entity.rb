@@ -15,7 +15,11 @@ class Maestrano::Connector::Rails::Entity
     Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} #{Entities::Company.external_entity_name.pluralize}")
     # This method should return only entities that have been updated since the last_synchronization
     # It should also implements an option to do a full synchronization when opts[:full_sync] == true or when there is no last_synchronization
-    client.all(self.class.external_entity_name)
+    if opts[:full_sync] || last_synchronization.blank?
+      client.all(self.class.external_entity_name)
+    else
+      client.all(self.class.external_entity_name, ((last_synchronization.to_date).to_s))
+    end
   end
 
   def create_external_entity(client, mapped_connec_entity, external_entity_name, organization)

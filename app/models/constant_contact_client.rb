@@ -10,10 +10,10 @@ class ConstantContactClient
     @headers["Content-Type"] = "application/json"
   end
 
-  def all(external_entity_name)
+  def all(external_entity_name, modified_since=nil)
     arr = []
     url = get_entity_url(external_entity_name)
-    data = self.class.get("#{url}?api_key=#{@api_key}", :headers => @headers)
+    data = self.class.get("#{url}?api_key=#{@api_key}&modified_since=#{modified_since}", :headers => @headers)
     external_entity_name == "Account" ? arr << data : data['results']
   end
 
