@@ -16,12 +16,21 @@ class Entities::Company < Maestrano::Connector::Rails::Entity
     true
   end
 
+  def self.id_from_external_entity_hash(entity)
+    # This method return the id from an external_entity_hash
+    entity['email']
+  end
+
   def self.object_name_from_connec_entity_hash(entity)
-    "#{entity['first_name']} #{entity['last_name']}"
+    "#{entity['name']}"
   end
 
   def self.object_name_from_external_entity_hash(entity)
-    "#{entity['FirstName']} #{entity['LastName']}"
+    "#{entity['organization_name']}"
+  end
+
+  def self.last_update_date_from_external_entity_hash(entity)
+    Time.now
   end
 
 end
