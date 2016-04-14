@@ -47,7 +47,7 @@ class ConstantContactClient
     entity[:time_zone_id] = "US/Eastern"
     entity[:address] = {}
     entity[:address][:city] = venue_detail["address"]["city"]
-    entity[:address][:state] = venue_detail[0]["address"]["region"]
+    entity[:address][:state] = venue_detail["address"]["region"]
     entity[:address][:country] = venue_detail["address"]["region"]
     entity[:address][:line1] = venue_detail["address"]["line1"]
     entity[:address][:line2] = venue_detail["address"]["line2"]
