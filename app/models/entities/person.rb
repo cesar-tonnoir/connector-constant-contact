@@ -13,6 +13,20 @@ class Entities::Person < Maestrano::Connector::Rails::Entity
     PersonMapper
   end
 
+  def get_external_entities(client, last_synchronization, organization, opts={})
+    @lists = client.class.get("/lists?api_key=#{client.instance_variable_get(:@api_key)}", :headers => client.instance_variable_get(:@headers))
+    super
+  end
+
+  def map_to_external(entity, organization)
+    mapped_entity = super
+    mapped_entity.merge(lists: [id: @lists.first["id"]])
+  end
+
+  def get_connec_entities(client, last_synchronization, organization, opts={})
+    super(client, last_synchronization, organization, opts.merge(:$filter => "type eq 'MANUAL'")) #change the filter
+  end
+
   def self.object_name_from_connec_entity_hash(entity)
     "#{entity['first_name']} #{entity['last_name']}"
   end
@@ -34,7 +48,21 @@ class PersonMapper
   map from('address_work/billing/region'), to('addresses[0]/state')
   map from('address_work/billing/postal_code'), to('addresses[0]/postal_code')
   map from('address_work/billing/country'), to('addresses[0]/country_code')
-  map from('email'), to('email_addresses[0]/email_address')
+  map from('email/address'), to('email_addresses[0]/email_address'), default: 'default@yopmail.com'
   map from('status'), to('lists[0]/status')
+
+
+
+    after_normalize do |input, output|
+
+      if output[:addresses].blank?
+        output[:addresses] = []
+        output[:addresses][0] = {}
+      else
+        output[:addresses][0][:country_code] = Entities::Person::COUNTRY_CODES.key(output[:addresses][0][:country_code])
+      end
+      output[:addresses][0][:address_type] = input["address_work"]["billing"].present? ? "BUSINESS" : "PERSONAL"
+      output
+    end
 
 end

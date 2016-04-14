@@ -13,14 +13,22 @@ class ConstantContactClient
   def all(external_entity_name, modified_since=nil)
     arr = []
     url = get_entity_url(external_entity_name)
-    data = self.class.get("#{url}?api_key=#{@api_key}&modified_since=#{modified_since}", :headers => @headers)
+    if modified_since == nil
+      data = self.class.get("#{url}?api_key=#{@api_key}", :headers => @headers)
+    else
+      data = self.class.get("#{url}?api_key=#{@api_key}&modified_since=#{modified_since}", :headers => @headers)
+    end
     external_entity_name == "Account" ? arr << data : data['results']
   end
 
   def create(external_entity_name, entity)
     url = get_entity_url(external_entity_name)
-    modified_entity = fetch_data(url, entity)
-    self.class.post("#{url}?api_key=#{@api_key}", :headers => @headers, :body => modified_entity.to_json)
+    if url == "/eventspot/events"
+      modified_entity = modify_entity_for_event_creation(entity)
+      self.class.post("#{url}?api_key=#{@api_key}", :headers => @headers, :body => modified_entity.to_json)
+    else
+      self.class.post("#{url}?api_key=#{@api_key}", :headers => @headers, :body => entity.to_json)
+    end
   end
 
   def update(external_entity_name, entity, id)
@@ -28,33 +36,18 @@ class ConstantContactClient
     self.class.put("#{url}/#{id}?api_key=#{@api_key}", :headers => @headers, :body => entity.to_json)
   end
 
-  def modify_entity_for_contact_creation(entity)
-    lists = self.class.get("/lists?api_key=#{@api_key}", :headers => @headers)
-    entity[:lists][0][:id] = lists.first["id"]
-    if entity[:addresses].blank?
-      entity[:addresses] = []
-      entity[:addresses][0] = {}
-    else
-      entity[:addresses][0][:country_code] = Entities::Person::COUNTRY_CODES.key(entity[:addresses][0][:country_code])
-    end
-    entity[:email_addresses][0][:email_address] = "default@yopmail.com" if entity[:email_addresses][0][:email_address].blank?
-
-    entity[:addresses][0][:address_type] = "PERSONAL"
-    entity
-  end
-
-
   def modify_entity_for_event_creation(entity)
     grp_id = Maestrano::Connector::Rails::Organization.first.uid
     maestrano_client = Maestrano::Connec::Client.new(grp_id)
     venue_detail = maestrano_client.get("/venues/#{entity[:venue_id]}")["venues"]
     entity[:type] = "OTHER"
+    entity[:name] = venue_detail["name"]
     entity[:title] = venue_detail["name"]
     entity[:location] = venue_detail["name"]
     entity[:time_zone_id] = "US/Eastern"
     entity[:address] = {}
     entity[:address][:city] = venue_detail["address"]["city"]
-    entity[:address][:state] = venue_detail["address"]["region"]
+    entity[:address][:state] = venue_detail[0]["address"]["region"]
     entity[:address][:country] = venue_detail["address"]["region"]
     entity[:address][:line1] = venue_detail["address"]["line1"]
     entity[:address][:line2] = venue_detail["address"]["line2"]
@@ -78,15 +71,6 @@ class ConstantContactClient
           "/eventspot/events"
         else
           "/account/info"
-        end
-    end
-
-    def fetch_data(url, entity)
-      case url
-        when "/contacts"
-          modify_entity_for_contact_creation(entity)
-        when "/eventspot/events"
-          modify_entity_for_event_creation(entity)
         end
     end
 

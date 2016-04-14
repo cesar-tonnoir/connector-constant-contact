@@ -41,6 +41,6 @@ class Maestrano::Connector::Rails::Entity
 
   def self.last_update_date_from_external_entity_hash(entity)
     # This method return the last update date from an external_entity_hash
-    entity['modified_date']||entity['created_date'].to_time
+    entity['modified_date'].to_time || Time.now
   end
 end
