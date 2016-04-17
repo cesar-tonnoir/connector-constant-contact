@@ -12,15 +12,6 @@ class Entities::Company < Maestrano::Connector::Rails::Entity
     CompanyMapper
   end
 
-  def self.singleton?
-    true
-  end
-
-  def self.id_from_external_entity_hash(entity)
-    # This method return the id from an external_entity_hash
-    entity['email']
-  end
-
   def self.object_name_from_connec_entity_hash(entity)
     "#{entity['name']}"
   end
@@ -29,25 +20,39 @@ class Entities::Company < Maestrano::Connector::Rails::Entity
     "#{entity['organization_name']}"
   end
 
+  # Entity has no id so we are using email (id for a singleton ressource doesn't mapper anyway)
+  def self.id_from_external_entity_hash(entity)
+    entity['email']
+  end
+
+  # No modified_date
   def self.last_update_date_from_external_entity_hash(entity)
     Time.now
+  end
+
+  def self.singleton?
+    true
+  end
+
+  def self.external_singleton?
+    true
   end
 
 end
 
 class CompanyMapper
   extend HashMapper
-    map from('/name'), to('/organization_name')
-    map from('/timezone'), to('/timezone')
-    map from('/email/address'), to('/email')
 
-    map from('/website/url'), to('/domain')
-    map from('/phone/landline'), to('/phone')
+    map from('name'), to('organization_name')
+    map from('timezone'), to('time_zone')
+    map from('email/address'), to('email')
 
-    map from('/address/billing/line1'), to('/address1')
-    map from('/address/billing/city'), to('/city')
-    map from('/address/billing/region'), to('/province')
-    map from('/address/billing/postal_code'), to('/zip')
-    map from('/address/billing/country'), to('/country_code')
-    map from('/currency'), to('/currency')
+    map from('website/url'), to('website')
+    map from('phone/landline'), to('phone')
+
+    map from('address/billing/line1'), to('organization_addresses[0]/line1')
+    map from('address/billing/line2'), to('organization_addresses[0]/line2')
+    map from('address/billing/city'), to('organization_addresses[0]/city')
+    map from('address/billing/postal_code'), to('organization_addresses[0]/postal_code')
+    map from('address/billing/country'), to('organization_addresses[0]/country_code')
 end
