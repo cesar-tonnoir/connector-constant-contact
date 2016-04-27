@@ -1,15 +1,13 @@
-/ TODO
-/ Replace ConstantContact
 .home
   .banners
     .row
       .col-md-10.col-md-offset-2
-        %h2 ConstantContact Connector
+        %h2 Constant Contact Connector
         %p
           -if @organization
-            Link your company <strong>#{@organization.name} (#{@organization.uid})</strong> to ConstantContact to get your business in synch. Check the status of your connection on this screen.
+            Link your company <strong>#{@organization.name} (#{@organization.uid})</strong> to Constant Contact to get your business in synch. Check the status of your connection on this screen.
           -else
-            Link your account to ConstantContact to get your business in synch. Check the status of your connection on this screen.
+            Link your account to Constant Contact to get your business in synch. Check the status of your connection on this screen.
 
   .container
     - if current_user
@@ -25,14 +23,14 @@
         .col-md-6.link-step-description
           %h
             - if @organization.oauth_uid
-              Your ConstantContact account <strong>#{@organization.oauth_name} (#{@organization.oauth_uid})</strong> is currently linked
+              Your Constant Contact account <strong>#{@organization.oauth_name} (#{@organization.oauth_uid})</strong> is currently linked
             - else
-              Your ConstantContact account is not linked
-        .col-md-2.col-md-offset-3.text-center.link-step-action
+              Your Constant Contact account is not linked
+        .col-md-3.col-md-offset-2.text-center.link-step-action
           - if @organization.oauth_uid
             = link_to "Disconnect", signout_omniauth_path(organization_id: @organization.id), class: "btn btn-warning btn-lg #{is_admin ? '' : 'disabled'}"
           - else
-            = link_to "Link to ConstantContact", "/auth/constantcontact/request", class: "btn btn-warning btn-lg" if is_admin
+            = link_to "Link to Constant Contact", "/auth/constantcontact/request", class: "btn btn-warning btn-lg" if is_admin
 
       .spacer1
 
@@ -66,7 +64,7 @@
         .spacer2
         .row
           .col-md-4.col-md-offset-4.text-center
-            = link_to 'Go to ConstantContact', home_redirect_to_external_path, class: 'btn btn-lg btn-primary'
+            = link_to 'Go to Constant Contact', home_redirect_to_external_path, class: 'btn btn-lg btn-primary'
 
     - else
       .row
