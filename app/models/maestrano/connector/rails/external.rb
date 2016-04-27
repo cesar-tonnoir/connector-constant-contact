@@ -7,6 +7,6 @@ class Maestrano::Connector::Rails::External
 
   def self.get_client(organization)
     token = "Bearer " + organization.oauth_token
-    ConstantContactClient.new(ENV[:constantcontact_key], token)
+    ConstantContactClient.new(ENV['constant_contact_key'], token)
   end
 end

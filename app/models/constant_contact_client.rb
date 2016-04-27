@@ -31,6 +31,7 @@ class ConstantContactClient
     endpoint = get_entity_params(entity_name)[:endpoint]
     self.class.put("#{url}/#{id}?api_key=#{@api_key}", :headers => @headers, :body => entity.to_json)
   end
+  
   # def modify_entity_for_event_creation(entity)
   #   grp_id = Maestrano::Connector::Rails::Organization.first.uid
   #   maestrano_client = Maestrano::Connec::Client.new(grp_id)
