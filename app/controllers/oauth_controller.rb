@@ -1,9 +1,5 @@
 class OauthController < ApplicationController
 
-  # TODO
-  # Routes for this controller are not provided by the gem and
-  # should be set according to your needs
-
   def request_omniauth
     if is_admin
       auth_params = {
