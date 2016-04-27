@@ -10,7 +10,7 @@ class ConstantContactClient
     @headers["Content-Type"] = "application/json"
   end
 
-  def all(entity_name, singleton?, modified_since=nil)
+  def all(entity_name, singleton, modified_since=nil)
     entity_params = get_entity_params(entity_name)
     query_params = entity_params[:query_params] || {}
     query_params.merge!(api_key: @api_key)
@@ -19,7 +19,7 @@ class ConstantContactClient
     end
     data = self.class.get("#{entity_params[:endpoint]}?query_params.to_query", :headers => @headers)
     
-    singleton? ? [data] : data['results']
+    singleton ? [data] : data['results']
   end
 
   def create(entity_name, entity)
