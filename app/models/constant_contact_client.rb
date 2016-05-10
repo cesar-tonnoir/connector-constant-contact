@@ -11,52 +11,68 @@ class ConstantContactClient
   end
 
   def all(entity_name, singleton, modified_since=nil)
-    entity_params = get_entity_params(entity_name)
-    query_params = entity_params[:query_params] || {}
-    query_params.merge!(api_key: @api_key)
-    if modified_since
-      query_params.merge!(modified_since: modified_since.iso8601)
+    begin
+      entity_params = get_entity_params(entity_name)
+      query_params = entity_params[:query_params] || {}
+      query_params.merge!(api_key: @api_key)
+      if modified_since
+        query_params.merge!(modified_since: modified_since.iso8601)
+      end
+      response = self.class.get("#{entity_params[:endpoint]}?#{query_params.to_query}", :headers => @headers)
+      raise "No response received" unless response && !response.body.blank?
+      response = JSON.parse(response.body)
+      Rails.logger.debug "Client fetch #{entity_name}. Response=#{response}"
+
+      if singleton
+        [response]
+      else
+        # Depending on the endpoint, response may be an array or a hash with a 'results' key
+        if response.kind_of?(Hash) && response['results']
+          response['results']
+        elsif response.kind_of?(Array)
+          response
+        else
+          raise "Unexpected response: #{response}"
+        end
+      end
+    rescue => e
+      Rails.logger.warn "Error while fetching #{entity_name}: #{e}"
+      raise "Error while fetching #{entity_name}: #{e}"
     end
-    data = self.class.get("#{entity_params[:endpoint]}?query_params.to_query", :headers => @headers)
-    
-    singleton ? [data] : data['results']
   end
 
   def create(entity_name, entity)
-    endpoint = get_entity_params(entity_name)[:endpoint]
-    self.class.post("#{url}?api_key=#{@api_key}", :headers => @headers, :body => entity.to_json)
+    begin
+      endpoint = get_entity_params(entity_name)[:endpoint]
+      response = self.class.post("#{endpoint}?api_key=#{@api_key}", :headers => @headers, :body => entity.to_json)
+      raise "No response received" unless response && !response.body.blank?
+      response = JSON.parse(response.body)
+
+      if response.kind_of?(Hash) && response['id']
+        response['id']
+      else
+        raise "Bad response: #{response}"
+      end
+    rescue => e
+      Rails.logger.warn "Error while creating #{entity_name}: #{e}"
+      raise "Error while creating #{entity_name}: #{e}"
+    end
   end
 
   def update(entity_name, entity, id)
-    endpoint = get_entity_params(entity_name)[:endpoint]
-    self.class.put("#{url}/#{id}?api_key=#{@api_key}", :headers => @headers, :body => entity.to_json)
+    begin
+      endpoint = get_entity_params(entity_name)[:endpoint]
+      response = self.class.put("#{endpoint}/#{id}?api_key=#{@api_key}", :headers => @headers, :body => entity.to_json)
+      raise "No response received" unless response && !response.body.blank?
+      response = JSON.parse(response.body)
+      raise "Response contains error: #{response}" if response.kind_of?(Array)
+      response
+    rescue => e
+      Rails.logger.warn "Error while updating #{entity_name} (id: #{id}): #{e}"
+      raise "Error while updating #{entity_name} (id: #{id}): #{e}"
+    end
   end
   
-  # def modify_entity_for_event_creation(entity)
-  #   grp_id = Maestrano::Connector::Rails::Organization.first.uid
-  #   maestrano_client = Maestrano::Connec::Client.new(grp_id)
-  #   venue_detail = maestrano_client.get("/venues/#{entity[:venue_id]}")["venues"]
-  #   entity[:type] = "OTHER"
-  #   entity[:name] = venue_detail["name"]
-  #   entity[:title] = venue_detail["name"]
-  #   entity[:location] = venue_detail["name"]
-  #   entity[:time_zone_id] = "US/Eastern"
-  #   entity[:address] = {}
-  #   entity[:address][:city] = venue_detail["address"]["city"]
-  #   entity[:address][:state] = venue_detail["address"]["region"]
-  #   entity[:address][:country] = venue_detail["address"]["region"]
-  #   entity[:address][:line1] = venue_detail["address"]["line1"]
-  #   entity[:address][:line2] = venue_detail["address"]["line2"]
-  #   entity[:address][:state_code] = ""
-  #   entity[:address][:country_code] = ""
-  #   entity[:address][:postal_code] = venue_detail["address"]["postal_code"]
-  #   entity[:contact] = {}
-  #   entity[:contact][:name] = Maestrano::Connector::Rails::Organization.first.oauth_uid
-  #   entity[:contact][:organization_name] = Maestrano::Connector::Rails::Organization.first.name
-  #   entity.delete(:venue_id)
-  #   entity
-  # end
-
   private
     def get_entity_params(entity_name)
       {

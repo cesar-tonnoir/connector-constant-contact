@@ -13,19 +13,20 @@ class Entities::Person < Maestrano::Connector::Rails::Entity
   end
 
   def get_external_entities(client, last_synchronization, organization, opts={})
-    @lists = client.all('List')
+    @lists = client.all('List', false)
     super
   end
 
   def map_to_external(entity, organization)
     mapped_entity = super
     # Need to specifiy at least one contact list
-    mapped_entity.merge(lists: [id: @lists.first["id"]])
+    mapped_entity.merge(lists: [id: @lists.first['id']])
   end
 
   def get_connec_entities(client, last_synchronization, organization, opts={})
-    super(client, last_synchronization, organization, opts) #TODO filter people with emails only
-    # super(client, last_synchronization, organization, opts.merge(:$filter => "type eq 'MANUAL'")) #change the filter
+    # TODO use Connec! filter when available
+    entities = super(client, last_synchronization, organization, opts)
+    entities.reject{|e| e['email'].empty?}
   end
 
   def self.object_name_from_connec_entity_hash(entity)
@@ -48,9 +49,7 @@ end
 class PersonMapper
   extend HashMapper
 
-  # TODO: find_or_create in connec!
-  # company_name
-
+  # Mapping to constantcontact
   after_normalize do |input, output|
     if output[:addresses] && !output[:addresses].empty?
       output[:addresses].first.merge!(address_type: 'BUSINESS')
@@ -58,8 +57,16 @@ class PersonMapper
 
     output
   end
-  
 
+  # Mapping to Connec!
+  after_denormalize do |input, output|
+    output[:notes] = input['notes'].map{|note| NoteMapper.denormalize(note)} if input['notes']
+
+    output[:opts] = {attach_to_organization: input['company_name']} unless input['company_name'].blank?
+
+    output
+  end
+  
   map from('first_name'), to('first_name')
   map from('last_name'), to('last_name'), default: 'Undefined'
   map from('title'), to('prefix_name')
@@ -79,6 +86,4 @@ class PersonMapper
   map from('phone_home/landline'), to('home_phone')
   map from('phone_home/mobile'), to('cell_phone')
   map from('phone_home/fax'), to('fax')
-
-  map from('notes'), to('note'), using: NoteMapper
 end

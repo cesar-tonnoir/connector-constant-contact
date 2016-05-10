@@ -20,7 +20,7 @@ class Entities::Company < Maestrano::Connector::Rails::Entity
     "#{entity['organization_name']}"
   end
 
-  # Entity has no id so we are using email (id for a singleton ressource doesn't mapper anyway)
+  # Entity has no id so we are using email (id for a singleton ressource doesn't matter anyway)
   def self.id_from_external_entity_hash(entity)
     entity['email']
   end
@@ -35,6 +35,10 @@ class Entities::Company < Maestrano::Connector::Rails::Entity
   end
 
   def self.external_singleton?
+    true
+  end
+
+  def self.no_date_filtering?
     true
   end
 

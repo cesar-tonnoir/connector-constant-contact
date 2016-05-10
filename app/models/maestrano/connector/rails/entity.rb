@@ -12,11 +12,13 @@ class Maestrano::Connector::Rails::Entity
   def get_external_entities(client, last_synchronization, organization, opts={})
     return [] unless self.class.can_read_external?
     Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} #{Entities::Company.external_entity_name.pluralize}")
-    if opts[:full_sync] || last_synchronization.blank?
-      client.all(self.class.external_entity_name, self.class.external_singleton?)
+    if opts[:full_sync] || last_synchronization.blank? || self.class.no_date_filtering?
+      entities = client.all(self.class.external_entity_name, self.class.external_singleton?)
     else
-      client.all(self.class.external_entity_name, self.class.external_singleton?, last_synchronization.updated_at)
+      entities = client.all(self.class.external_entity_name, self.class.external_singleton?, last_synchronization.updated_at)
     end
+    Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Received data: Source=#{Maestrano::Connector::Rails::External.external_name}, Entity=#{self.class.external_entity_name}, Response=#{entities}")
+    entities
   end
 
   def create_external_entity(client, mapped_connec_entity, external_entity_name, organization)
@@ -39,6 +41,10 @@ class Maestrano::Connector::Rails::Entity
 
   # To be overwritten if needed
   def self.external_singleton?
+    false
+  end
+
+  def self.no_date_filtering?
     false
   end
 end
