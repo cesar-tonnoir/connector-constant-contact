@@ -137,7 +137,7 @@
     config.webhook.connec.subscriptions = {
       accounts: false,
       company: true,
-      employees: false,
+      employees: true,
       events: false,
       event_orders: false,
       invoices: false,
