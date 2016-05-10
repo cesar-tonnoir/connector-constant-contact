@@ -19,6 +19,7 @@ gem 'httparty'
 
 # gem 'omniauth-constantcontact2'
 gem 'constantcontact'
+gem 'countries'
 
 # Background jobs
 gem 'sinatra', :require => nil
