@@ -7,7 +7,10 @@ class ConstantContactClient
     Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Creating contact lists: start")
     client = Maestrano::Connector::Rails::External.get_client(organization)
 
-    ['Customer', 'Supplier', 'Leads and other contacts', 'Employee'].each do |name|
+    lists = client.all('List', false)
+    lists_name = lists.map{|list| list['name']}
+
+    (['Customer', 'Supplier', 'Leads and other contacts', 'Employee'] - lists_name).each do |name|
       client.create('List', {name: name, status: 'ACTIVE'})
     end
     Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Creating contact lists: end")
