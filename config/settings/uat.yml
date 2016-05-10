@@ -1,4 +1,4 @@
-app_host: 'https://connector-constant-contact-uat.herokuapp.com/'
+app_host: 'https://connector-constant-contact-uat.herokuapp.com'
 
 default:
   environment: 'production'

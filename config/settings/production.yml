@@ -1,4 +1,4 @@
-app_host: 'https://connector-constant-contact.herokuapp.com/'
+app_host: 'https://connector-constant-contact.herokuapp.com'
 
 
 default:

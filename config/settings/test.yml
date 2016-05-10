@@ -1,4 +1,4 @@
-app_host: 'http://localhost:3001/'
+app_host: 'http://localhost:3001'
 
 default:
   environment: 'local'

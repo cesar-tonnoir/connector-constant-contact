@@ -15,9 +15,10 @@ gem 'uglifier', '>= 1.3.0'
 gem 'maestrano-connector-rails'
 
 gem 'config'
-
-gem 'omniauth-constantcontact2'
 gem 'httparty'
+
+# gem 'omniauth-constantcontact2'
+gem 'constantcontact'
 
 # Background jobs
 gem 'sinatra', :require => nil

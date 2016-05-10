@@ -2,22 +2,29 @@ class OauthController < ApplicationController
 
   def request_omniauth
     if is_admin
-      auth_params = {
-        :org_uid => current_organization.uid
-      }
-      auth_params = URI.escape(auth_params.collect{|k,v| "#{k}=#{v}"}.join('&'))
-
-      redirect_to "/auth/#{params[:provider]}?#{auth_params}"
+      redirect_to ConstantContact::Auth::OAuth2.new.get_authorization_url
     else
       redirect_to root_url
     end
   end
 
   def create_omniauth
-    # add uid and token to organization
-    org_uid = params[:org_uid]
-    organization = Maestrano::Connector::Rails::Organization.find_by_uid_and_tenant(org_uid, current_user.tenant)
-    organization.from_omniauth(env["omniauth.auth"]) if organization && is_admin?(current_user, organization)
+    if is_admin
+      oauth = ConstantContact::Auth::OAuth2.new
+      if params[:code].present?
+        response = oauth.get_access_token(params[:code])
+        if response.present?
+          token = response['access_token']
+
+          current_organization.update(
+            oauth_uid: params[:username],
+            oauth_token: token,
+            provider: 'constantcontact'
+          )
+        end
+      end
+    end
+
     redirect_to root_url
   end
 
