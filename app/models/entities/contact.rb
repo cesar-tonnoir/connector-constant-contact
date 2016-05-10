@@ -1,4 +1,4 @@
-class Entities::Person < Maestrano::Connector::Rails::Entity
+class Entities::Contact < Maestrano::Connector::Rails::Entity
 
   def self.connec_entity_name
     'Person'
@@ -9,24 +9,52 @@ class Entities::Person < Maestrano::Connector::Rails::Entity
   end
 
   def self.mapper_class
-    PersonMapper
+    ContactMapper
   end
 
-  def get_external_entities(client, last_synchronization, organization, opts={})
-    @lists = client.all('List', false)
+  def before_sync(connec_client, external_client, last_synchronization, organization, opts)
     super
+    Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} contact lists")
+    @lists = external_client.all('List', false)
+    Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Received data: Source=#{Maestrano::Connector::Rails::External.external_name}, Entity=contact lists, Response=#{@lists}")
   end
 
   def map_to_external(entity, organization)
     mapped_entity = super
+
     # Need to specifiy at least one contact list
-    mapped_entity.merge(lists: [id: @lists.first['id']])
+    # We could do something smart with some db storage if this is too much of a performance issue
+    customer_list = @lists.find{|list| list['name'] == 'Customer'}
+    supplier_list = @lists.find{|list| list['name'] == 'Supplier'}
+    contact_list = @lists.find{|list| list['name'] == 'Leads and other contacts'} || @lists.first
+
+    lists = []
+    lists << {id: customer_list['id']} if entity['is_customer'] && customer_list
+    lists << {id: supplier_list['id']} if entity['is_supplier'] && supplier_list
+    lists << {id: contact_list['id']} if lists.empty?
+    lists.uniq!
+
+    mapped_entity.merge(lists: lists)
   end
 
   def get_connec_entities(client, last_synchronization, organization, opts={})
     # TODO use Connec! filter when available
     entities = super(client, last_synchronization, organization, opts)
     entities.reject{|e| e['email'].empty?}
+  end
+
+  def get_external_entities(client, last_synchronization, organization, opts={})
+    entities = super
+
+    # Filtering out contact belonging to the employee list as they are employee and not people in Connec!
+    # Performance..
+    employee_list = @lists.find{|list| list['name'] == 'Employee'}
+    if employee_list
+      employee_list_id = employee_list['id']
+      entities.reject{|e| e['lists'].find{|list| list['id'] == employee_list_id && list['status'] == 'ACTIVE'}}
+    else
+      entities
+    end
   end
 
   def self.object_name_from_connec_entity_hash(entity)
@@ -46,7 +74,7 @@ class NoteMapper
   map from('description'), to('note')
 end
 
-class PersonMapper
+class ContactMapper
   extend HashMapper
 
   # Mapping to constantcontact
@@ -78,7 +106,10 @@ class PersonMapper
   map from('address_work/billing/city'), to('addresses[0]/city')
   map from('address_work/billing/region'), to('addresses[0]/state')
   map from('address_work/billing/postal_code'), to('addresses[0]/postal_code')
-  map from('address_work/billing/country'), to('addresses[0]/country_code')
+  map from('address_work/billing/country'), to('addresses[0]/country_code'){|country|
+    c = ISO3166::Country.find_country_by_name(country) || ISO3166::Country.new(country)
+    c ? c.alpha2 : ''
+  }
 
   map from('email/address'), to('email_addresses[0]/email_address')
 

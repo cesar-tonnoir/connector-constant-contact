@@ -1,4 +1,4 @@
-class Entities::Company < Maestrano::Connector::Rails::Entity
+class Entities::Account < Maestrano::Connector::Rails::Entity
 
   def self.connec_entity_name
     'Company'
@@ -9,7 +9,7 @@ class Entities::Company < Maestrano::Connector::Rails::Entity
   end
 
   def self.mapper_class
-    CompanyMapper
+    AccountMapper
   end
 
   def self.object_name_from_connec_entity_hash(entity)
@@ -44,11 +44,12 @@ class Entities::Company < Maestrano::Connector::Rails::Entity
 
 end
 
-class CompanyMapper
+class AccountMapper
   extend HashMapper
 
     map from('name'), to('organization_name')
-    map from('timezone'), to('time_zone')
+    # TODO something smart with timezones
+    # map from('timezone'), to('time_zone')
     map from('email/address'), to('email')
 
     map from('website/url'), to('website')
