@@ -21,6 +21,8 @@ class OauthController < ApplicationController
             oauth_token: token,
             provider: 'constantcontact'
           )
+
+          ConstantContactClient.create_contact_lists(current_organization)
         end
       end
     end

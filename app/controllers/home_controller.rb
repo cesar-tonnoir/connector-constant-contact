@@ -34,7 +34,7 @@ class HomeController < ApplicationController
   end
 
   def redirect_to_external
-    redirect_to "https://login.constantcontact.com/login/"
+    redirect_to 'https://login.constantcontact.com/login/'
   end
 
 end

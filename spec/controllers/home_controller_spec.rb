@@ -88,7 +88,7 @@ describe HomeController, :type => :controller do
         subject { post :synchronize, opts: {'opts' => 'opts'} }
 
         it 'calls perform_later with opts' do
-          expect(Maestrano::Connector::Rails::SynchronizationJob).to receive(:perform_later).with(organization, {force: true, 'opts' => 'opts'})
+          expect(Maestrano::Connector::Rails::SynchronizationJob).to receive(:perform_later).with(organization, {forced: true, 'opts' => 'opts'})
           subject
         end
       end
@@ -108,7 +108,7 @@ describe HomeController, :type => :controller do
     subject { get :redirect_to_external }
 
     context 'otherwise' do
-      it {expect(subject).to redirect_to('somewhere')}
+      it {expect(subject).to redirect_to('https://login.constantcontact.com/login/')}
     end
   end
 end

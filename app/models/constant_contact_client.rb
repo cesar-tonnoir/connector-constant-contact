@@ -3,6 +3,16 @@ class ConstantContactClient
 
   base_uri 'https://api.constantcontact.com/v2/'
 
+  def self.create_contact_lists(organization)
+    Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Creating contact lists: start")
+    client = Maestrano::Connector::Rails::External.get_client(organization)
+
+    ['Customer', 'Supplier', 'Leads and other contacts', 'Employee'].each do |name|
+      client.create('List', {name: name, status: 'ACTIVE'})
+    end
+    Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Creating contact lists: end")
+  end
+
   def initialize(api_key, token)
     @api_key = api_key
     @headers = {}
@@ -10,6 +20,7 @@ class ConstantContactClient
     @headers["Content-Type"] = "application/json"
   end
 
+  # TODO pagination
   def all(entity_name, singleton, modified_since=nil)
     begin
       entity_params = get_entity_params(entity_name)
