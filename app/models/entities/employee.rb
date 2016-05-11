@@ -28,10 +28,14 @@ class Entities::Employee < Maestrano::Connector::Rails::Entity
     mapped_entity.merge(lists: [id: @employee_list['id']])
   end
 
+  def filter_connec_entities(entities, organization, opts={})
+    Entities::Contact.filter_connec_entities(entities)
+  end
+
   def get_connec_entities(client, last_synchronization, organization, opts={})
     # TODO use Connec! filter when available
-    entities = super(client, last_synchronization, organization, opts)
-    entities.reject{|e| e['email'].empty?}
+    entities = super
+    filter_connec_entities(entities, organization, opts)
   end
 
   def self.object_name_from_connec_entity_hash(entity)

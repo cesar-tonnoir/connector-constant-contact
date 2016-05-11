@@ -33,10 +33,18 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
     mapped_entity.merge(lists: lists)
   end
 
+  def filter_connec_entities(entities, organization, opts={})
+    self.class.filter_connec_entities(entities)
+  end
+
+  def self.filter_connec_entities(entities)
+    entities.reject{|e| e['email'].nil? || e['email'].empty?}
+  end
+
   def get_connec_entities(client, last_synchronization, organization, opts={})
     # TODO use Connec! filter when available
-    entities = super(client, last_synchronization, organization, opts)
-    entities.reject{|e| e['email'].empty?}
+    entities = super
+    filter_connec_entities(entities, organization, opts)
   end
 
   def get_external_entities(client, last_synchronization, organization, opts={})

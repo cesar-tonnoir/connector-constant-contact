@@ -9,6 +9,16 @@ describe Entities::Contact do
     it { expect(subject.mapper_class).to eql(ContactMapper) }
     it { expect(subject.object_name_from_connec_entity_hash({'first_name' => 'Jack', 'last_name' => 'The Ripper'})).to eql('Jack The Ripper') }
     it { expect(subject.object_name_from_external_entity_hash({'first_name' => 'Jack', 'last_name' => 'The Ripper'})).to eql('Jack The Ripper') }
+
+    describe 'filter_connec_entities' do
+      let(:entity1) { {'last_name' => 'Doe', 'email' => {'address' => 'doe@email.com'}} }
+      let(:entity2) { {'last_name' => 'Foe', 'email' => {}} }
+      let(:entity3) { {'last_name' => 'Poe', 'email' => nil} }
+      let(:entity4) { {'last_name' => 'Poe'} }
+      let(:entities) { [entity1, entity2, entity3, entity4] }
+
+      it { expect(subject.filter_connec_entities(entities)).to eql([entity1]) }
+    end
   end
 
   describe 'instance methods' do
