@@ -1,13 +1,11 @@
 # SQLite version 3.x
-#   gem install sqlite3
+#   gem 'activerecord-jdbcsqlite3-adapter'
 #
-#   Ensure the SQLite 3 gem is defined in your Gemfile
-#   gem 'sqlite3'
+# Configure Using Gemfile
+# gem 'activerecord-jdbcsqlite3-adapter'
 #
 default: &default
   adapter: sqlite3
-  pool: 5
-  timeout: 5000
 
 development:
   <<: *default
@@ -21,5 +19,13 @@ test:
   database: db/test.sqlite3
 
 production:
-  <<: *default
-  database: db/production.sqlite3
+  adapter: postgresql
+  url: <%=  ENV['DATABASE_URL'] %>
+  encoding: unicode
+  pool: 5
+
+uat:
+  adapter: postgresql
+  url: <%=  ENV['DATABASE_URL'] %>
+  encoding: unicode
+  pool: 5

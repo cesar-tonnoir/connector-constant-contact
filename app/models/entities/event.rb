@@ -1,3 +1,4 @@
+# Not used
 class Entities::Event < Maestrano::Connector::Rails::Entity
 
   def self.connec_entity_name

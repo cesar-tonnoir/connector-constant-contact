@@ -1,5 +1,3 @@
-/ TODO
-/ Replace ConstantContact
 .home
   .banners
     .container
@@ -7,15 +5,15 @@
         .row
           .col-md-10
             %h3 Data Shared
-            %small Equivalence between the internal id and ConstantContact id for each of your entities
+            %small Equivalence between the internal id and Constant Contact id for each of your entities
 
         - if @idmaps
           %table.table.table-condensed
             %th Entity name
             %th Internal entity
             %th Internal id
-            %th ConstantContact entity
-            %th ConstantContact id
+            %th Constant Contact entity
+            %th Constant Contact id
             %th Message
 
             - @idmaps.each do |idmap|
