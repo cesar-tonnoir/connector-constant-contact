@@ -19,7 +19,7 @@ class OauthController < ApplicationController
           current_organization.update(
             oauth_uid: params[:username],
             oauth_token: token,
-            provider: 'constantcontact'
+            oauth_provider: 'constantcontact'
           )
 
           ConstantContactClient.create_contact_lists(current_organization)
