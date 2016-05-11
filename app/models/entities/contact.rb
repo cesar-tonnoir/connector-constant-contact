@@ -15,23 +15,19 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
   def before_sync(connec_client, external_client, last_synchronization, organization, opts)
     super
     Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} contact lists")
-    @lists = external_client.all('List', false)
-    Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Received data: Source=#{Maestrano::Connector::Rails::External.external_name}, Entity=contact lists, Response=#{@lists}")
+    all_lists = external_client.all('List', false)
+    Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Received data: Source=#{Maestrano::Connector::Rails::External.external_name}, Entity=contact lists, Response=#{all_lists}")
+    extract_specific_lists(all_lists)
   end
 
   def map_to_external(entity, organization)
     mapped_entity = super
 
     # Need to specifiy at least one contact list
-    # We could do something smart with some db storage if this is too much of a performance issue
-    customer_list = @lists.find{|list| list['name'] == 'Customer'}
-    supplier_list = @lists.find{|list| list['name'] == 'Supplier'}
-    contact_list = @lists.find{|list| list['name'] == 'Leads and other contacts'} || @lists.first
-
     lists = []
-    lists << {id: customer_list['id']} if entity['is_customer'] && customer_list
-    lists << {id: supplier_list['id']} if entity['is_supplier'] && supplier_list
-    lists << {id: contact_list['id']} if lists.empty?
+    lists << {id: @customer_list['id']} if entity['is_customer'] && @customer_list
+    lists << {id: @supplier_list['id']} if entity['is_supplier'] && @supplier_list
+    lists << {id: @contact_list['id']} if lists.empty?
     lists.uniq!
 
     mapped_entity.merge(lists: lists)
@@ -48,9 +44,8 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
 
     # Filtering out contact belonging to the employee list as they are employee and not people in Connec!
     # Performance..
-    employee_list = @lists.find{|list| list['name'] == 'Employee'}
-    if employee_list
-      employee_list_id = employee_list['id']
+    if @employee_list
+      employee_list_id = @employee_list['id']
       entities.reject{|e| e['lists'].find{|list| list['id'] == employee_list_id && list['status'] == 'ACTIVE'}}
     else
       entities
@@ -64,6 +59,16 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
   def self.object_name_from_external_entity_hash(entity)
     "#{entity['first_name']} #{entity['last_name']}"
   end
+
+  private
+    def extract_specific_lists(all_lists)
+      # We could do something smart with some db storage if this is too much of a performance issue
+      @customer_list = all_lists.find{|list| list['name'] == 'Customer'}
+      @supplier_list = all_lists.find{|list| list['name'] == 'Supplier'}
+      @contact_list = all_lists.find{|list| list['name'] == 'Leads and other contacts'} || all_lists.first
+      @employee_list = all_lists.find{|list| list['name'] == 'Employee'}
+    end
+    
 
 end
 

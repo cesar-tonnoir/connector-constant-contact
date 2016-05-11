@@ -28,7 +28,7 @@ describe Entities::Contact do
       let(:contact2) { {'lists' => [{'id' => 'bbb', 'status' => 'ACTIVE'}, {'id' => 'aaa', 'status' => 'NOT ACTIVE'}]} }
       let(:contacts) { [contact1, contact2] }
       before {
-        subject.instance_variable_set(:@lists, lists)
+        subject.send(:extract_specific_lists, lists)
         allow(client).to receive(:all).and_return(contacts)
       }
 
@@ -192,7 +192,7 @@ describe Entities::Contact do
         }
 
         before {
-          subject.instance_variable_set(:@lists, lists)
+          subject.send(:extract_specific_lists, lists)
         }
 
         context 'when no specific list' do

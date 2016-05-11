@@ -114,18 +114,17 @@ describe Entities::Employee do
       }
 
       before {
-        subject.instance_variable_set(:@lists, lists)
+        subject.instance_variable_set(:@employee_list, list)
       }
 
       context 'when no specific list' do
-        let(:lists) {[{'id' => 'id', 'name' => 'Main list'}]}
-        it { expect(subject.map_to_external(connec_employee, nil)).to eql(cc_contact.merge(lists: [{id: 'id'}])) }
+        let(:list) {{'id' => 'id', 'name' => 'Main list'}}
+        it { expect(subject.map_to_external(connec_employee, nil)).to eql(cc_contact.merge(lists: [{id: list['id']}])) }
       end
 
       context 'when employee list' do
-        let(:employee_list) { {'id' => 'emp', 'name' => 'Employee'} }
-        let(:lists) {[{'id' => 'id', 'name' => 'Main list'}, employee_list]}
-        it { expect(subject.map_to_external(connec_employee, nil)).to eql(cc_contact.merge(lists: [{id: employee_list['id']}])) }
+        let(:list) { {'id' => 'emp', 'name' => 'Employee'} }
+        it { expect(subject.map_to_external(connec_employee, nil)).to eql(cc_contact.merge(lists: [{id: list['id']}])) }
       end
     end
   end
