@@ -1,0 +1,39 @@
+.home
+  .link-step
+    border: solid 1px silver
+    padding: 20px
+    border-radius: 4px
+
+    .link-step-number
+      padding-top: 7px
+
+      .link-step-badge
+        padding: 10px
+        font-size: 20px
+        border-radius: 20px
+
+    .link-step-description
+      padding-top: 17px
+
+    .link-step-action
+      padding-top: 3px
+
+    &.done
+      background-color: $done-step-bg-color
+      border-color: $done-step-border-color
+      .link-step-badge
+        background-color: $done-step-badge-color
+
+    &.todo
+      background-color: $todo-step-bg-color
+      border-color: $todo-step-border-color
+      .link-step-badge
+        background-color: $todo-step-badge-color
+
+  .sync-entity
+    padding-bottom: 8px
+    margin-bottom: 8px
+    border-bottom: dashed 1px silver
+
+  .btn.btn-lg.text-sm
+    font-size: 16px
