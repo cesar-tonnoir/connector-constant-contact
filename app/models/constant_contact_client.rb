@@ -19,8 +19,8 @@ class ConstantContactClient
   def initialize(api_key, token)
     @api_key = api_key
     @headers = {}
-    @headers["Authorization"] = token
-    @headers["Content-Type"] = "application/json"
+    @headers['Authorization'] = token
+    @headers['Content-Type'] = 'application/json'
   end
 
   def all(entity_name, singleton, modified_since=nil)
@@ -30,7 +30,6 @@ class ConstantContactClient
         query_params.merge!(modified_since: modified_since.iso8601)
       end
       
-      Rails.logger.debug "#{endpoint(entity_name)}?#{query_params.to_query}"
       response = self.class.get("#{endpoint(entity_name)}?#{query_params.to_query}", :headers => @headers)
       raise "No response received" unless response && !response.body.blank?
       
@@ -90,23 +89,13 @@ class ConstantContactClient
   
   private
     def endpoint(entity_name)
-      {
+      endpoint = {
         'Contact' => '/v2/contacts', 
         'Event' => '/v2/eventspot/events', 
         'Account' => '/v2/account/info', 
         'List' => '/v2/lists', 
       }[entity_name]
+      raise 'Unknow endpoint' unless endpoint
+      endpoint
     end
-
-    def entities_from_response(response)
-      # Depending on the endpoint, response may be an array or a hash with a 'results' key
-      if response.kind_of?(Hash) && response['results']
-        response['results']
-      elsif response.kind_of?(Array)
-        response
-      else
-        raise "Unexpected response: #{response}"
-      end
-    end
-
 end
