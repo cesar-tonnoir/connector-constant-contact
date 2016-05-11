@@ -40,6 +40,10 @@ html, body
       a
         font-size: $normal
 
+        &:hover, &:focus
+          color: $navbar-text-color
+          text-decoration: underline
+
 // Reduce the height of the navbar if on mobile device
 @media(min-width: 768px)
   .navbar-fixed-top
