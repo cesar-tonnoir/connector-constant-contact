@@ -38,7 +38,7 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
   end
 
   def self.filter_connec_entities(entities)
-    entities.reject{|e| e['email'].nil? || e['email'].empty?}
+    entities.reject{|e| e['email'].nil? || e['email'].empty? || e['email']['address'].blank? }
   end
 
   def get_connec_entities(client, last_synchronization, organization, opts={})

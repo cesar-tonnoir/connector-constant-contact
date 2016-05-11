@@ -15,7 +15,8 @@ describe Entities::Contact do
       let(:entity2) { {'last_name' => 'Foe', 'email' => {}} }
       let(:entity3) { {'last_name' => 'Poe', 'email' => nil} }
       let(:entity4) { {'last_name' => 'Poe'} }
-      let(:entities) { [entity1, entity2, entity3, entity4] }
+      let(:entity5) { {'last_name' => 'Doe', 'email' => {'address' => ''}} }
+      let(:entities) { [entity1, entity2, entity3, entity4, entity5] }
 
       it { expect(subject.filter_connec_entities(entities)).to eql([entity1]) }
     end
