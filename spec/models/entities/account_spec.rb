@@ -16,8 +16,11 @@ describe Entities::Account do
   end
 
   describe 'instance methods' do
-
-    subject { Entities::Account.new }
+    let!(:organization) { create(:organization, oauth_token: 'token') }
+    let(:connec_client) { nil }
+    let(:external_client) { Maestrano::Connector::Rails::External.get_client(organization) }
+    let(:opts) { {} }
+    subject { Entities::Account.new(organization, connec_client, external_client, opts) }
 
     describe 'mappings' do
       describe 'map_to_external' do
@@ -114,10 +117,10 @@ describe Entities::Account do
                 :country_code => "AU"
               }
             ]
-          }
+          }.with_indifferent_access
         }
 
-        it { expect(subject.map_to_external(connec_company, nil)).to eql(cc_account) }
+        it { expect(subject.map_to_external(connec_company)).to eql(cc_account) }
       end
 
       describe 'map_to_connec' do
@@ -140,6 +143,7 @@ describe Entities::Account do
         let(:connec_company) {
           {
             :name => "pp",
+            :id => [{"id"=>"ccsb1@yopmail.com", "provider"=>"this-app", "realm"=>"this-realm"}],
             :email => {
               :address => "ccsb1@yopmail.com"
             },
@@ -149,10 +153,10 @@ describe Entities::Account do
             :phone => {
               :landline => "440876543212"
             }
-          }
+          }.with_indifferent_access
         }
 
-        it { expect(subject.map_to_connec(cc_account, nil)).to eql(connec_company) }
+        it { expect(subject.map_to_connec(cc_account)).to eql(connec_company) }
       end
     end
   end

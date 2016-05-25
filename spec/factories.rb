@@ -3,6 +3,8 @@ FactoryGirl.define do
   factory :organization, class: Maestrano::Connector::Rails::Organization do
     name "My company"
     tenant "default"
+    oauth_provider 'this-app'
+    oauth_uid 'this-realm'
   end
 
   factory :idmap, class: Maestrano::Connector::Rails::IdMap do
