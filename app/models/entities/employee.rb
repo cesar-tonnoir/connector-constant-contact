@@ -35,7 +35,7 @@ class Entities::Employee < Maestrano::Connector::Rails::Entity
   def get_connec_entities(last_synchronization)
     # TODO use Connec! filter when available
     entities = super
-    filter_connec_entities(entities, organization, opts)
+    filter_connec_entities(entities)
   end
 
   def self.object_name_from_connec_entity_hash(entity)
