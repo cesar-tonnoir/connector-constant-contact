@@ -12,8 +12,11 @@ describe Entities::Employee do
   end
 
   describe 'instance methods' do
-
-    subject { Entities::Employee.new }
+    let!(:organization) { create(:organization, oauth_token: 'token') }
+    let(:connec_client) { nil }
+    let(:external_client) { Maestrano::Connector::Rails::External.get_client(organization) }
+    let(:opts) { {} }
+    subject { Entities::Employee.new(organization, connec_client, external_client, opts) }
 
     describe 'map_to_external' do
       let(:connec_employee) {
@@ -110,7 +113,7 @@ describe Entities::Employee do
           :job_title => "Sales Manger",
           :last_name => "Wilson",
           :work_phone => "408-123-4567",
-        }
+        }.with_indifferent_access
       }
 
       before {
@@ -119,12 +122,12 @@ describe Entities::Employee do
 
       context 'when no specific list' do
         let(:list) {{'id' => 'id', 'name' => 'Main list'}}
-        it { expect(subject.map_to_external(connec_employee, nil)).to eql(cc_contact.merge(lists: [{id: list['id']}])) }
+        it { expect(subject.map_to_external(connec_employee)).to eql(cc_contact.merge(lists: [{id: list['id']}])) }
       end
 
       context 'when employee list' do
         let(:list) { {'id' => 'emp', 'name' => 'Employee'} }
-        it { expect(subject.map_to_external(connec_employee, nil)).to eql(cc_contact.merge(lists: [{id: list['id']}])) }
+        it { expect(subject.map_to_external(connec_employee)).to eql(cc_contact.merge(lists: [{id: list['id']}])) }
       end
     end
   end

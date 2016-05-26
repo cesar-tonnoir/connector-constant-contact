@@ -12,30 +12,30 @@ class Entities::Employee < Maestrano::Connector::Rails::Entity
     EmployeeMapper
   end
 
-  def before_sync(connec_client, external_client, last_synchronization, organization, opts)
+  def before_sync(last_synchronization)
     super
-    Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} contact lists")
-    all_lists = external_client.all('List', false)
-    Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Received data: Source=#{Maestrano::Connector::Rails::External.external_name}, Entity=contact lists, Response=#{all_lists}")
+    Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} contact lists")
+    all_lists = @external_client.all('List', false)
+    Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Received data: Source=#{Maestrano::Connector::Rails::External.external_name}, Entity=contact lists, Response=#{all_lists}")
     # We could do something smart with some db storage if this is too much of a performance issue
     @employee_list = all_lists.find{|list| list['name'] == 'Employee'} || all_lists.first
   end
 
-  def map_to_external(entity, organization)
+  def map_to_external(entity)
     mapped_entity = super
 
     # Need to specifiy at least one contact list
     mapped_entity.merge(lists: [id: @employee_list['id']])
   end
 
-  def filter_connec_entities(entities, organization, opts={})
+  def filter_connec_entities(entities)
     Entities::Contact.filter_connec_entities(entities)
   end
 
-  def get_connec_entities(client, last_synchronization, organization, opts={})
+  def get_connec_entities(last_synchronization)
     # TODO use Connec! filter when available
     entities = super
-    filter_connec_entities(entities, organization, opts)
+    filter_connec_entities(entities)
   end
 
   def self.object_name_from_connec_entity_hash(entity)

@@ -12,15 +12,15 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
     ContactMapper
   end
 
-  def before_sync(connec_client, external_client, last_synchronization, organization, opts)
+  def before_sync(last_synchronization)
     super
-    Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} contact lists")
-    all_lists = external_client.all('List', false)
-    Maestrano::Connector::Rails::ConnectorLogger.log('info', organization, "Received data: Source=#{Maestrano::Connector::Rails::External.external_name}, Entity=contact lists, Response=#{all_lists}")
+    Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} contact lists")
+    all_lists = @external_client.all('List', false)
+    Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Received data: Source=#{Maestrano::Connector::Rails::External.external_name}, Entity=contact lists, Response=#{all_lists}")
     extract_specific_lists(all_lists)
   end
 
-  def map_to_external(entity, organization)
+  def map_to_external(entity)
     mapped_entity = super
 
     # Need to specifiy at least one contact list
@@ -33,7 +33,25 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
     mapped_entity.merge(lists: lists)
   end
 
-  def filter_connec_entities(entities, organization, opts={})
+  def map_to_connec(entity)
+    mapped_entity = super
+
+    entity['lists'].each do |list|
+      if @customer_list && @customer_list['id'] == list['id']
+        mapped_entity['is_customer'] = true
+      elsif @supplier_list && @supplier_list['id'] == list['id']
+        mapped_entity['is_supplier'] = true
+        mapped_entity['is_customer'] ||= false
+      elsif @contact_list && @contact_list['id'] == list['id']
+        mapped_entity['is_lead'] = true
+        mapped_entity['is_customer'] ||= false
+      end
+    end
+
+    mapped_entity
+  end
+
+  def filter_connec_entities(entities)
     self.class.filter_connec_entities(entities)
   end
 
@@ -41,13 +59,13 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
     entities.reject{|e| e['email'].nil? || e['email'].empty? || e['email']['address'].blank? }
   end
 
-  def get_connec_entities(client, last_synchronization, organization, opts={})
+  def get_connec_entities(last_synchronization)
     # TODO use Connec! filter when available
     entities = super
-    filter_connec_entities(entities, organization, opts)
+    filter_connec_entities(entities)
   end
 
-  def get_external_entities(client, last_synchronization, organization, opts={})
+  def get_external_entities(last_synchronization)
     entities = super
 
     # Filtering out contact belonging to the employee list as they are employee and not people in Connec!
