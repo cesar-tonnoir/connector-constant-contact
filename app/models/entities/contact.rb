@@ -33,6 +33,24 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
     mapped_entity.merge(lists: lists)
   end
 
+  def map_to_connec(entity)
+    mapped_entity = super
+
+    entity['lists'].each do |list|
+      if @customer_list && @customer_list['id'] == list['id']
+        mapped_entity['is_customer'] = true
+      elsif @supplier_list && @supplier_list['id'] == list['id']
+        mapped_entity['is_supplier'] = true
+        mapped_entity['is_customer'] ||= false
+      elsif @contact_list && @contact_list['id'] == list['id']
+        mapped_entity['is_lead'] = true
+        mapped_entity['is_customer'] ||= false
+      end
+    end
+
+    mapped_entity
+  end
+
   def filter_connec_entities(entities)
     self.class.filter_connec_entities(entities)
   end

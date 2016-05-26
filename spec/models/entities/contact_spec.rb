@@ -259,6 +259,10 @@ describe Entities::Contact do
               {
                 "id" => "1734115864",
                 "status" => "ACTIVE"
+              },
+              {
+                "id" => "234567",
+                "status" => "ACTIVE"
               }
             ],
             "source" => "API",
@@ -291,6 +295,14 @@ describe Entities::Contact do
         let(:company_name) { nil }
         let(:notes) { nil }
 
+        let(:list_name1) { 'Random name' }
+        let(:list_name2) { 'Random name too' }
+        let(:lists) {[{'id' => '1734115864', 'name' => list_name1}, {'id' => '234567', 'name' => list_name2}]}
+
+        before {
+          subject.send(:extract_specific_lists, lists)
+        }
+
         let(:connec_person) {
           {
             :id => [{"id"=>"1992685500", "provider"=>"this-app", "realm"=>"this-realm"}],
@@ -319,7 +331,14 @@ describe Entities::Contact do
               :mobile => "",
               :fax => ""
             },
-          }.with_indifferent_access
+          }.merge(type_hash).with_indifferent_access
+        }
+
+        let(:type_hash) {
+          {
+            :is_lead => true,
+            :is_customer => false
+          }
         }
 
         it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person) }
@@ -348,6 +367,31 @@ describe Entities::Contact do
             ]
           }
           it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person.merge(notes: [{:id=>"33825bb0-16bd-11e6-9c4f-d4ae52a45a09", :description=>"a note"}])) }
+        end
+
+        describe 'lead' do
+          let(:list_name1) { 'Leads and other contacts' }
+          let(:type_hash) { {is_customer: false, is_lead: true} }
+          it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person) }
+        end
+
+        describe 'supplier' do
+          let(:list_name1) { 'Supplier' }
+          let(:type_hash) { {is_customer: false, is_supplier: true} }
+          it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person) }
+        end
+
+        describe 'customer' do
+          let(:list_name1) { 'Customer' }
+          let(:type_hash) { {is_customer: true} }
+          it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person) }
+        end
+
+        describe 'customer and supplier' do
+          let(:list_name1) { 'Supplier' }
+          let(:list_name2) { 'Customer' }
+          let(:type_hash) { {is_customer: true, is_supplier: true} }
+          it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person) }
         end
       end
     end
