@@ -23,12 +23,13 @@ describe Entities::Contact do
   end
 
   describe 'instance methods' do
-
-    subject { Entities::Contact.new }
+    let!(:organization) { create(:organization, oauth_token: 'token') }
+    let(:connec_client) { nil }
+    let(:external_client) { Maestrano::Connector::Rails::External.get_client(organization) }
+    let(:opts) { {} }
+    subject { Entities::Contact.new(organization, connec_client, external_client, opts) }
 
     describe 'get_external_entities' do
-      let!(:organization) { create(:organization, oauth_token: 'token') }
-      let(:client) { Maestrano::Connector::Rails::External.get_client(organization) }
       let(:lists) {
         [
           {'id' => 'aaa', 'name' => 'Employee'},
@@ -40,10 +41,10 @@ describe Entities::Contact do
       let(:contacts) { [contact1, contact2] }
       before {
         subject.send(:extract_specific_lists, lists)
-        allow(client).to receive(:all).and_return(contacts)
+        allow(external_client).to receive(:all).and_return(contacts)
       }
 
-      it { expect(subject.get_external_entities(client, nil, organization)).to eql([contact2]) }
+      it { expect(subject.get_external_entities(nil)).to eql([contact2]) }
     end
 
     describe 'mappings' do
@@ -199,7 +200,7 @@ describe Entities::Contact do
             :home_phone => "+61 2 8574 1223",
             :cell_phone => "+61 449 785 123",
             :fax => "+61 2 9974 1223",
-          }
+          }.with_indifferent_access
         }
 
         before {
@@ -208,7 +209,7 @@ describe Entities::Contact do
 
         context 'when no specific list' do
           let(:lists) {[{'id' => 'id', 'name' => 'Main list'}]}
-          it { expect(subject.map_to_external(connec_person, nil)).to eql(cc_contact.merge(lists: [{id: 'id'}])) }
+          it { expect(subject.map_to_external(connec_person)).to eql(cc_contact.merge(lists: [{id: 'id'}])) }
         end
 
         context 'when customer and supplier lists' do
@@ -218,7 +219,7 @@ describe Entities::Contact do
           let(:customer_list) { {'id' => 'cust', 'name' => 'Customer'} }
           let(:supplier_list) { {'id' => 'supp', 'name' => 'Supplier'} }
           let(:lists) {[{'id' => 'id', 'name' => 'Main list'}, customer_list, supplier_list]}
-          it { expect(subject.map_to_external(connec_person, nil)).to eql(cc_contact.merge(lists: [{id: customer_list['id']}, {id: supplier_list['id']}])) }
+          it { expect(subject.map_to_external(connec_person)).to eql(cc_contact.merge(lists: [{id: customer_list['id']}, {id: supplier_list['id']}])) }
         end
 
         context 'when neither customer or supplier' do
@@ -227,7 +228,7 @@ describe Entities::Contact do
           }
           let(:contact_list) { {'id' => 'cust', 'name' => 'Leads and other contacts'} }
           let(:lists) {[{'id' => 'id', 'name' => 'Main list'}, contact_list]}
-          it { expect(subject.map_to_external(connec_person, nil)).to eql(cc_contact.merge(lists: [{id: contact_list['id']}])) }
+          it { expect(subject.map_to_external(connec_person)).to eql(cc_contact.merge(lists: [{id: contact_list['id']}])) }
         end
       end
 
@@ -257,6 +258,10 @@ describe Entities::Contact do
             "lists" => [
               {
                 "id" => "1734115864",
+                "status" => "ACTIVE"
+              },
+              {
+                "id" => "234567",
                 "status" => "ACTIVE"
               }
             ],
@@ -290,8 +295,17 @@ describe Entities::Contact do
         let(:company_name) { nil }
         let(:notes) { nil }
 
+        let(:list_name1) { 'Random name' }
+        let(:list_name2) { 'Random name too' }
+        let(:lists) {[{'id' => '1734115864', 'name' => list_name1}, {'id' => '234567', 'name' => list_name2}]}
+
+        before {
+          subject.send(:extract_specific_lists, lists)
+        }
+
         let(:connec_person) {
           {
+            :id => [{"id"=>"1992685500", "provider"=>"this-app", "realm"=>"this-realm"}],
             :first_name => "John",
             :last_name => "Doe",
             :title => "",
@@ -317,20 +331,27 @@ describe Entities::Contact do
               :mobile => "",
               :fax => ""
             },
+          }.merge(type_hash).with_indifferent_access
+        }
+
+        let(:type_hash) {
+          {
+            :is_lead => true,
+            :is_customer => false
           }
         }
 
-        it { expect(subject.map_to_connec(cc_contact, nil)).to eql(connec_person) }
+        it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person) }
 
         describe 'company name' do
           context 'empty company_name' do
             let(:company_name) { '' }
-            it { expect(subject.map_to_connec(cc_contact, nil)).to eql(connec_person) }
+            it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person) }
           end
 
           context 'non empty company name' do
             let(:company_name) { 'Some company' }
-            it { expect(subject.map_to_connec(cc_contact, nil)).to eql(connec_person.merge(opts: {:attach_to_organization => "Some company"})) }
+            it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person.merge(opts: {:attach_to_organization => "Some company"})) }
           end
         end
 
@@ -345,7 +366,32 @@ describe Entities::Contact do
               }
             ]
           }
-          it { expect(subject.map_to_connec(cc_contact, nil)).to eql(connec_person.merge(notes: [{:id=>"33825bb0-16bd-11e6-9c4f-d4ae52a45a09", :description=>"a note"}])) }
+          it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person.merge(notes: [{:id=>"33825bb0-16bd-11e6-9c4f-d4ae52a45a09", :description=>"a note"}])) }
+        end
+
+        describe 'lead' do
+          let(:list_name1) { 'Leads and other contacts' }
+          let(:type_hash) { {is_customer: false, is_lead: true} }
+          it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person) }
+        end
+
+        describe 'supplier' do
+          let(:list_name1) { 'Supplier' }
+          let(:type_hash) { {is_customer: false, is_supplier: true} }
+          it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person) }
+        end
+
+        describe 'customer' do
+          let(:list_name1) { 'Customer' }
+          let(:type_hash) { {is_customer: true} }
+          it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person) }
+        end
+
+        describe 'customer and supplier' do
+          let(:list_name1) { 'Supplier' }
+          let(:list_name2) { 'Customer' }
+          let(:type_hash) { {is_customer: true, is_supplier: true} }
+          it { expect(subject.map_to_connec(cc_contact)).to eql(connec_person) }
         end
       end
     end

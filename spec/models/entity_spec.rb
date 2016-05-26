@@ -12,9 +12,11 @@ describe Maestrano::Connector::Rails::Entity do
   end
 
   describe 'instance methods' do
-    subject { Maestrano::Connector::Rails::Entity.new }
     let!(:organization) { create(:organization, oauth_token: 'token') }
-    let(:client) { Maestrano::Connector::Rails::External.get_client(organization) }
+    let(:connec_client) { nil }
+    let(:external_client) { Maestrano::Connector::Rails::External.get_client(organization) }
+    let(:opts) { {} }
+    subject { Maestrano::Connector::Rails::Entity.new(organization, connec_client, external_client, opts) }
     let(:external_entity_name) { 'Contact' }
 
     describe 'get_external_entities' do
@@ -24,13 +26,13 @@ describe Maestrano::Connector::Rails::Entity do
 
       context 'cant read external' do
         before { allow(subject.class).to receive(:can_read_external?).and_return false }
-        it { expect(subject.get_external_entities(client, last_synchronization, organization, opts)).to eql([]) }
+        it { expect(subject.get_external_entities(last_synchronization)).to eql([]) }
       end
 
       describe 'full syncs' do
         def does_a_full_sync
-          expect(client).to receive(:all).with(external_entity_name, false).and_return([])
-          subject.get_external_entities(client, last_synchronization, organization, opts)
+          expect(external_client).to receive(:all).with(external_entity_name, false).and_return([])
+          subject.get_external_entities(last_synchronization)
         end
 
         context 'with opts' do
@@ -51,27 +53,27 @@ describe Maestrano::Connector::Rails::Entity do
 
       describe 'partial sync' do
         it 'calls all with a timestamps' do
-          expect(client).to receive(:all).with(external_entity_name, false, last_synchronization.updated_at).and_return([])
-          subject.get_external_entities(client, last_synchronization, organization, opts)
+          expect(external_client).to receive(:all).with(external_entity_name, false, last_synchronization.updated_at).and_return([])
+          subject.get_external_entities(last_synchronization)
         end
       end
 
       it 'returns the result' do
-        allow(client).to receive(:all).and_return([{'id' => '12'}])
-        expect(subject.get_external_entities(client, last_synchronization, organization, opts)).to eql([{'id' => '12'}])
+        allow(external_client).to receive(:all).and_return([{'id' => '12'}])
+        expect(subject.get_external_entities(last_synchronization)).to eql([{'id' => '12'}])
       end
     end
 
     describe 'create_external_entity' do
       let(:entity) { {first_name: 'Lily'} }
       it 'calls create' do
-        expect(client).to receive(:create).with(external_entity_name, entity).and_return('123')
-        subject.create_external_entity(client, entity, external_entity_name, organization)
+        expect(external_client).to receive(:create).with(external_entity_name, entity).and_return('123')
+        subject.create_external_entity(entity, external_entity_name)
       end
 
       it 'returns the id' do
-        allow(client).to receive(:create).and_return('123')
-        expect(subject.create_external_entity(client, entity, external_entity_name, organization)).to eql('123')
+        allow(external_client).to receive(:create).and_return('123')
+        expect(subject.create_external_entity(entity, external_entity_name)).to eql('123')
       end
     end
 
@@ -80,8 +82,8 @@ describe Maestrano::Connector::Rails::Entity do
       let(:id) { '123' }
 
       it 'calls update' do
-        expect(client).to receive(:update).with(external_entity_name, entity, id).and_return({})
-        subject.update_external_entity(client, entity, id, external_entity_name, organization)
+        expect(external_client).to receive(:update).with(external_entity_name, entity, id).and_return({})
+        subject.update_external_entity(entity, id, external_entity_name)
       end
     end
 
