@@ -16,6 +16,7 @@ gem 'maestrano-connector-rails'
 
 gem 'config'
 gem 'httparty'
+gem 'attr_encrypted', '~> 1.4.0'
 
 # gem 'omniauth-constantcontact2'
 gem 'constantcontact'

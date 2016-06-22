@@ -2,13 +2,13 @@ class Maestrano::Connector::Rails::Entity
   include Maestrano::Connector::Rails::Concerns::Entity
 
   # Return an array of entities from the external app
-  def get_external_entities(last_synchronization)
+  def get_external_entities(last_synchronization_date = nil)
     return [] unless self.class.can_read_external?
     Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} #{self.class.external_entity_name.pluralize}")
-    if @opts[:full_sync] || last_synchronization.blank? || self.class.no_date_filtering?
+    if @opts[:full_sync] || last_synchronization_date.blank? || self.class.no_date_filtering?
       entities = @external_client.all(self.class.external_entity_name, self.class.external_singleton?)
     else
-      entities = @external_client.all(self.class.external_entity_name, self.class.external_singleton?, last_synchronization.updated_at)
+      entities = @external_client.all(self.class.external_entity_name, self.class.external_singleton?, last_synchronization_date)
     end
     Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Received data: Source=#{Maestrano::Connector::Rails::External.external_name}, Entity=#{self.class.external_entity_name}, Response=#{entities}")
     entities
@@ -24,7 +24,7 @@ class Maestrano::Connector::Rails::Entity
     @external_client.update(external_entity_name, mapped_connec_entity, external_id)
   end
 
-  def get_connec_entities(last_synchronization)
+  def get_connec_entities(last_synchronization_date = nil)
     # Should find a way to do the same for webhooks
     @connec_client.class.headers("CONNEC-COUNTRY-FORMAT"=>'alpha2')
     super
@@ -36,6 +36,10 @@ class Maestrano::Connector::Rails::Entity
 
   def self.last_update_date_from_external_entity_hash(entity)
     entity['modified_date'].to_time
+  end
+
+  def self.creation_date_from_external_entity_hash(entity)
+    entity['created_date'].to_time
   end
 
   # To be overwritten if needed
