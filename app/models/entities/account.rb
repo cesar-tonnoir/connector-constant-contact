@@ -30,6 +30,10 @@ class Entities::Account < Maestrano::Connector::Rails::Entity
     Time.now
   end
 
+  def self.creation_date_from_external_entity_hash(entity)
+    Time.now
+  end
+
   def self.singleton?
     true
   end

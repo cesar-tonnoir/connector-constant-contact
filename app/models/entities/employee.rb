@@ -12,7 +12,7 @@ class Entities::Employee < Maestrano::Connector::Rails::Entity
     EmployeeMapper
   end
 
-  def before_sync(last_synchronization)
+  def before_sync(last_synchronization_date)
     super
     Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} contact lists")
     all_lists = @external_client.all('List', false)
@@ -32,7 +32,7 @@ class Entities::Employee < Maestrano::Connector::Rails::Entity
     Entities::Contact.filter_connec_entities(entities)
   end
 
-  def get_connec_entities(last_synchronization)
+  def get_connec_entities(last_synchronization_date)
     # TODO use Connec! filter when available
     entities = super
     filter_connec_entities(entities)
