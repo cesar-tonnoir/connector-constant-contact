@@ -12,7 +12,7 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
     ContactMapper
   end
 
-  def before_sync(last_synchronization_date)
+  def before_sync(last_synchronization_date = nil)
     super
     Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} contact lists")
     all_lists = @external_client.all('List', false)
@@ -59,13 +59,13 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
     entities.reject{|e| e['email'].nil? || e['email'].empty? || e['email']['address'].blank? }
   end
 
-  def get_connec_entities(last_synchronization_date)
+  def get_connec_entities(last_synchronization_date = nil)
     # TODO use Connec! filter when available
     entities = super
     filter_connec_entities(entities)
   end
 
-  def get_external_entities(last_synchronization_date)
+  def get_external_entities(external_entity_name, last_synchronization_date = nil)
     entities = super
 
     # Filtering out contact belonging to the employee list as they are employee and not people in Connec!

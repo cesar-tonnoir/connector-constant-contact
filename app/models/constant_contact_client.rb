@@ -64,7 +64,7 @@ class ConstantContactClient
       response = JSON.parse(response.body)
 
       if response.kind_of?(Hash) && response['id']
-        response['id']
+        response
       else
         raise "Bad response: #{response}"
       end

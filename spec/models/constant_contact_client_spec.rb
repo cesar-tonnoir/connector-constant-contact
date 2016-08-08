@@ -144,7 +144,7 @@ describe ConstantContactClient do
       end
 
       it 'returns the id' do
-        expect(subject.create('Contact', entity)).to eql('123')
+        expect(subject.create('Contact', entity)).to eql('id' => '123')
       end
 
       describe 'failures' do

@@ -1,16 +1,15 @@
-class Maestrano::Connector::Rails::Entity
+class Maestrano::Connector::Rails::Entity < Maestrano::Connector::Rails::EntityBase
   include Maestrano::Connector::Rails::Concerns::Entity
 
   # Return an array of entities from the external app
-  def get_external_entities(last_synchronization_date = nil)
-    return [] unless self.class.can_read_external?
-    Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} #{self.class.external_entity_name.pluralize}")
+  def get_external_entities(external_entity_name, last_synchronization_date = nil)
+    Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} #{external_entity_name.pluralize}")
     if @opts[:full_sync] || last_synchronization_date.blank? || self.class.no_date_filtering?
-      entities = @external_client.all(self.class.external_entity_name, self.class.external_singleton?)
+      entities = @external_client.all(external_entity_name, self.class.external_singleton?)
     else
-      entities = @external_client.all(self.class.external_entity_name, self.class.external_singleton?, last_synchronization_date)
+      entities = @external_client.all(external_entity_name, self.class.external_singleton?, last_synchronization_date)
     end
-    Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Received data: Source=#{Maestrano::Connector::Rails::External.external_name}, Entity=#{self.class.external_entity_name}, Response=#{entities}")
+    Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Received data: Source=#{Maestrano::Connector::Rails::External.external_name}, Entity=#{external_entity_name}, Response=#{entities}")
     entities
   end
 
