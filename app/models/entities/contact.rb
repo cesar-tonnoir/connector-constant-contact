@@ -12,7 +12,7 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
     ContactMapper
   end
 
-  def before_sync(last_synchronization_date)
+  def before_sync(last_synchronization_date = nil)
     super
     Maestrano::Connector::Rails::ConnectorLogger.log('info', @organization, "Fetching #{Maestrano::Connector::Rails::External.external_name} contact lists")
     all_lists = @external_client.all('List', false)
@@ -59,23 +59,21 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
     entities.reject{|e| e['email'].nil? || e['email'].empty? || e['email']['address'].blank? }
   end
 
-  def get_connec_entities(last_synchronization_date)
+  def get_connec_entities(last_synchronization_date = nil)
     # TODO use Connec! filter when available
     entities = super
     filter_connec_entities(entities)
   end
 
-  def get_external_entities(last_synchronization_date)
+  def get_external_entities(external_entity_name, last_synchronization_date = nil)
     entities = super
 
     # Filtering out contact belonging to the employee list as they are employee and not people in Connec!
     # Performance..
-    if @employee_list
-      employee_list_id = @employee_list['id']
-      entities.reject{|e| e['lists'].find{|list| list['id'] == employee_list_id && list['status'] == 'ACTIVE'}}
-    else
-      entities
-    end
+    # TODO, do only one call to contact and wrap people and employee in a complex entity
+    return entities unless @employee_list
+    employee_list_id = @employee_list['id']
+    entities.reject { |e| e['lists'].find { |list| list['id'] == employee_list_id && list['status'] == 'ACTIVE' } }
   end
 
   def self.object_name_from_connec_entity_hash(entity)
@@ -94,8 +92,6 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
       @contact_list = all_lists.find{|list| list['name'] == 'Leads and other contacts'} || all_lists.first
       @employee_list = all_lists.find{|list| list['name'] == 'Employee'}
     end
-    
-
 end
 
 class NoteMapper

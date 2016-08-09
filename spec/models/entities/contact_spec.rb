@@ -44,7 +44,7 @@ describe Entities::Contact do
         allow(external_client).to receive(:all).and_return(contacts)
       }
 
-      it { expect(subject.get_external_entities(nil)).to eql([contact2]) }
+      it { expect(subject.get_external_entities('', nil)).to eql([contact2]) }
     end
 
     describe 'mappings' do

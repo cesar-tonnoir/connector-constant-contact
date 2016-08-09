@@ -22,17 +22,11 @@ describe Maestrano::Connector::Rails::Entity do
     describe 'get_external_entities' do
       let(:last_synchronization) { create(:synchronization, organization: organization, updated_at: 2.days.ago) }
       let(:opts) { {} }
-      before { allow(subject.class).to receive(:external_entity_name).and_return(external_entity_name) }
-
-      context 'cant read external' do
-        before { allow(subject.class).to receive(:can_read_external?).and_return false }
-        it { expect(subject.get_external_entities(last_synchronization.updated_at)).to eql([]) }
-      end
 
       describe 'full syncs' do
         def does_a_full_sync
           expect(external_client).to receive(:all).with(external_entity_name, false).and_return([])
-          subject.get_external_entities(last_synchronization && last_synchronization.updated_at)
+          subject.get_external_entities(external_entity_name, last_synchronization && last_synchronization.updated_at)
         end
 
         context 'with opts' do
@@ -54,26 +48,26 @@ describe Maestrano::Connector::Rails::Entity do
       describe 'partial sync' do
         it 'calls all with a timestamps' do
           expect(external_client).to receive(:all).with(external_entity_name, false, last_synchronization.updated_at).and_return([])
-          subject.get_external_entities(last_synchronization.updated_at)
+          subject.get_external_entities(external_entity_name, last_synchronization.updated_at)
         end
       end
 
       it 'returns the result' do
         allow(external_client).to receive(:all).and_return([{'id' => '12'}])
-        expect(subject.get_external_entities(last_synchronization.updated_at)).to eql([{'id' => '12'}])
+        expect(subject.get_external_entities(external_entity_name, last_synchronization.updated_at)).to eql([{'id' => '12'}])
       end
     end
 
     describe 'create_external_entity' do
       let(:entity) { {first_name: 'Lily'} }
       it 'calls create' do
-        expect(external_client).to receive(:create).with(external_entity_name, entity).and_return('123')
+        expect(external_client).to receive(:create).with(external_entity_name, entity).and_return({'id' => '123'})
         subject.create_external_entity(entity, external_entity_name)
       end
 
-      it 'returns the id' do
-        allow(external_client).to receive(:create).and_return('123')
-        expect(subject.create_external_entity(entity, external_entity_name)).to eql('123')
+      it 'returns the entity' do
+        allow(external_client).to receive(:create).and_return({'id' => '123'})
+        expect(subject.create_external_entity(entity, external_entity_name)).to eql({'id' => '123'})
       end
     end
 
