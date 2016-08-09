@@ -70,12 +70,10 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
 
     # Filtering out contact belonging to the employee list as they are employee and not people in Connec!
     # Performance..
-    if @employee_list
-      employee_list_id = @employee_list['id']
-      entities.reject{|e| e['lists'].find{|list| list['id'] == employee_list_id && list['status'] == 'ACTIVE'}}
-    else
-      entities
-    end
+    # TODO, do only one call to contact and wrap people and employee in a complex entity
+    return entities unless @employee_list
+    employee_list_id = @employee_list['id']
+    entities.reject { |e| e['lists'].find { |list| list['id'] == employee_list_id && list['status'] == 'ACTIVE' } }
   end
 
   def self.object_name_from_connec_entity_hash(entity)
@@ -94,8 +92,6 @@ class Entities::Contact < Maestrano::Connector::Rails::Entity
       @contact_list = all_lists.find{|list| list['name'] == 'Leads and other contacts'} || all_lists.first
       @employee_list = all_lists.find{|list| list['name'] == 'Employee'}
     end
-    
-
 end
 
 class NoteMapper
