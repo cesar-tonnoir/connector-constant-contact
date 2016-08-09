@@ -38,13 +38,23 @@ class Entities::Employee < Maestrano::Connector::Rails::Entity
     filter_connec_entities(entities)
   end
 
+  def get_external_entities(external_entity_name, last_synchronization_date = nil)
+    entities = super
+
+    # Keeping only contact belonging to the employee list
+    # Performance..
+    # TODO, do only one call to contact and wrap people and employee in a complex entity
+    return entities unless @employee_list
+    employee_list_id = @employee_list['id']
+    entities.select { |e| e['lists'].find { |list| list['id'] == employee_list_id && list['status'] == 'ACTIVE' } }
+  end
+
   def self.object_name_from_connec_entity_hash(entity)
     "#{entity['first_name']} #{entity['last_name']}"
   end
 
-  # Only pushing employee from Connec! to constant contact
-  def self.can_read_external?
-    false
+  def self.object_name_from_external_entity_hash(entity)
+    "#{entity['first_name']} #{entity['last_name']}"
   end
 end
 
@@ -54,7 +64,7 @@ class EmployeeMapper
   # Mapping to constantcontact
   after_normalize do |input, output|
     if output[:addresses] && !output[:addresses].empty?
-      output[:addresses].first.merge!(address_type: 'BUSINESS')
+      output[:addresses].first[:address_type] = 'BUSINESS'
     end
 
     output
@@ -71,7 +81,7 @@ class EmployeeMapper
   map from('address/billing/city'), to('addresses[0]/city')
   map from('address/billing/region'), to('addresses[0]/state')
   map from('address/billing/postal_code'), to('addresses[0]/postal_code')
-  map from('address/billing/country'), to('addresses[0]/country_code'){|country|
+  map from('address/billing/country'), to('addresses[0]/country_code') { |country|
     c = ISO3166::Country.find_country_by_name(country) || ISO3166::Country.new(country)
     c ? c.alpha2 : ''
   }

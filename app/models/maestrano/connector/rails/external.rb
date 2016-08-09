@@ -12,6 +12,10 @@ class Maestrano::Connector::Rails::External
    'Constant Contact'
   end
 
+  def self.create_account_link(organization = nil)
+    'https://www.constantcontact.com/signup.jsp'
+  end
+
   def self.get_client(organization)
     token = "Bearer " + organization.oauth_token
     ConstantContactClient.new(ENV['constant_contact_key'], token)

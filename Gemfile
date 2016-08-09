@@ -1,10 +1,6 @@
 ruby '2.2.3', :engine => 'jruby', :engine_version => '9.0.5.0'
 source 'https://rubygems.org'
 
-gem 'haml-rails'
-gem 'bootstrap-sass'
-gem 'autoprefixer-rails'
-
 gem 'rails', '4.2.4'
 gem 'turbolinks'
 gem 'jquery-rails'
@@ -14,19 +10,8 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :jruby]
 gem 'uglifier', '>= 1.3.0'
 gem 'maestrano-connector-rails'
 
-gem 'config'
-gem 'httparty'
-gem 'attr_encrypted', '~> 1.4.0'
-
-# gem 'omniauth-constantcontact2'
 gem 'constantcontact'
 gem 'countries'
-
-# Background jobs
-gem 'sinatra', :require => nil
-gem 'sidekiq'
-gem 'sidekiq-cron'
-gem 'slim'
 
 group :test do
   gem 'simplecov'

@@ -8,7 +8,7 @@ describe Entities::Employee do
     it { expect(subject.external_entity_name).to eql('Contact') }
     it { expect(subject.mapper_class).to eql(EmployeeMapper) }
     it { expect(subject.object_name_from_connec_entity_hash({'first_name' => 'Jack', 'last_name' => 'The Ripper'})).to eql('Jack The Ripper') }
-    it { expect(subject.can_read_external?).to be false }
+    it { expect(subject.object_name_from_external_entity_hash({'first_name' => 'Jack', 'last_name' => 'The Ripper'})).to eql('Jack The Ripper') }
   end
 
   describe 'instance methods' do
@@ -100,10 +100,10 @@ describe Entities::Employee do
         {
           :addresses => [
             {
-              :line1=>"342 De Carlo Ave", 
-              :city=>"Richmond", 
-              :state=>"CA", 
-              :postal_code=>"94801", 
+              :line1=>"342 De Carlo Ave",
+              :city=>"Richmond",
+              :state=>"CA",
+              :postal_code=>"94801",
               :country_code=>"US",
               :address_type=>"BUSINESS"
             }
@@ -129,6 +129,103 @@ describe Entities::Employee do
         let(:list) { {'id' => 'emp', 'name' => 'Employee'} }
         it { expect(subject.map_to_external(connec_employee)).to eql(cc_contact.merge(lists: [{id: list['id']}])) }
       end
+    end
+
+    describe 'mapping to connec' do
+      let(:cc_contact) {
+        {
+          "id" => "1992685500",
+          "status" => "ACTIVE",
+          "fax" => "",
+          "addresses" => [
+            {
+              "id" => "1189c390-16bd-11e6-9c4f-d4ae52a45a09",
+              "line1" => "23 some street",
+              "line2" => "",
+              "line3" => "",
+              "city" => "Paris",
+              "address_type" => "PERSONAL",
+              "state_code" => "",
+              "state" => "Idf",
+              "country_code" => "fr",
+              "postal_code" => "75010",
+              "sub_postal_code" => ""
+            }
+          ],
+          "confirmed" => false,
+          "lists" => [
+            {
+              "id" => "1734115864",
+              "status" => "ACTIVE"
+            },
+            {
+              "id" => "234567",
+              "status" => "ACTIVE"
+            }
+          ],
+          "source" => "API",
+          "email_addresses" => [
+            {
+              "id" => "5961cf20-16b6-11e6-89d7-d4ae52a45a09",
+              "status" => "ACTIVE",
+              "confirm_status" => "NO_CONFIRMATION_REQUIRED",
+              "opt_in_source" => "ACTION_BY_OWNER",
+              "opt_in_date" => "2016-05-10T13:51:52.000Z",
+              "email_address" => "emp32@example.com"
+            }
+          ],
+          "prefix_name" => "",
+          "first_name" => "John",
+          "middle_name" => "",
+          "last_name" => "Doe",
+          "job_title" => "Worker",
+          "company_name" => 'name',
+          "home_phone" => "0987654",
+          "work_phone" => "567890",
+          "cell_phone" => "",
+          "custom_fields" => [],
+          "created_date" => "2016-05-10T13:51:52.000Z",
+          "modified_date" => "2016-05-10T14:40:43.000Z",
+          "source_details" => "Maestrano - dev"
+        }
+      }
+
+      let(:connec_employee) {
+        {
+          "first_name" => "John",
+          "last_name" => "Doe",
+          "title" => "",
+          "job_title" => "Worker",
+          "address" => {
+            "billing" => {
+              "line1" => "23 some street",
+              "line2" => "",
+              "city" => "Paris",
+              "region" => "Idf",
+              "postal_code" => "75010",
+              "country" => "fr"
+            }
+          },
+          "email" => {
+            "address" => "emp32@example.com"
+          },
+          "phone" => {
+            "landline" => "567890",
+            "landline2" => "0987654",
+            "mobile" => "",
+            "fax" => ""
+          },
+          "id" => [
+            {
+              "id" => "1992685500",
+              "provider" => "this-app",
+              "realm" => "this-realm"
+            }
+          ]
+        }
+      }
+
+      it { expect(subject.map_to_connec(cc_contact)).to eql(connec_employee) }
     end
   end
 end

@@ -36,7 +36,10 @@ class ConstantContactClient
       response = JSON.parse(response.body)
       Rails.logger.debug "Client fetch first page #{entity_name}. Response=#{response}"
 
-      return [response] if singleton
+      if singleton
+        raise "Unexpected response: #{response.first['error_message']}" if response.is_a?(Array) && response.first['error_message']
+        return [response]
+      end
       return response if response.kind_of?(Array)
       raise "Unexpected response: #{response}" unless response.kind_of?(Hash) && response['results']
 
@@ -64,7 +67,7 @@ class ConstantContactClient
       response = JSON.parse(response.body)
 
       if response.kind_of?(Hash) && response['id']
-        response['id']
+        response
       else
         raise "Bad response: #{response}"
       end
